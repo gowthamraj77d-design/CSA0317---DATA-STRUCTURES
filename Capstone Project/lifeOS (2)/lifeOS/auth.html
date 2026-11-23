@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LifeOS – Sign In</title>
+  <meta name="description" content="Sign in to LifeOS – your Smart Personal Productivity Dashboard." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0f;
+      --surface:   rgba(255,255,255,0.05);
+      --border:    rgba(255,255,255,0.10);
+      --accent:    #7c6dfa;
+      --accent2:   #a78bfa;
+      --text:      #f0f0ff;
+      --muted:     #8888aa;
+      --error:     #f87171;
+      --success:   #34d399;
+      --radius:    14px;
+      --shadow:    0 24px 64px rgba(0,0,0,0.6);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── animated gradient orbs ───────────────────── */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(124,109,250,0.25) 0%, transparent 70%);
+      top: -200px; left: -200px;
+      animation: drift1 12s ease-in-out infinite alternate;
+    }
+    body::after {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(167,139,250,0.18) 0%, transparent 70%);
+      bottom: -150px; right: -150px;
+      animation: drift2 15s ease-in-out infinite alternate;
+    }
+    @keyframes drift1 { to { transform: translate(80px, 80px); } }
+    @keyframes drift2 { to { transform: translate(-60px, -60px); } }
+
+    /* ── auth card ────────────────────────────────── */
+    .auth-wrap {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 440px;
+      padding: 16px;
+    }
+
+    .auth-card {
+      background: rgba(15,14,26,0.85);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 36px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+    }
+
+    /* ── logo ─────────────────────────────────────── */
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .logo-icon {
+      font-size: 2.4rem;
+      display: block;
+      margin-bottom: 8px;
+    }
+    .logo-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #7c6dfa, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+    .logo-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── tabs ─────────────────────────────────────── */
+    .auth-tabs {
+      display: flex;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 9px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 7px;
+      transition: all 0.2s;
+    }
+    .auth-tab.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(124,109,250,0.35);
+    }
+
+    /* ── panels ───────────────────────────────────── */
+    .auth-panel { display: none; }
+    .auth-panel.active { display: block; }
+
+    /* ── form ─────────────────────────────────────── */
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 7px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.925rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,109,250,0.18);
+    }
+    .form-input::placeholder { color: var(--muted); }
+
+    /* ── messages ─────────────────────────────────── */
+    .form-msg {
+      min-height: 36px;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      margin-bottom: 14px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-msg.show { display: flex; }
+    .form-msg.error   { background: rgba(248,113,113,0.12); color: var(--error);   border: 1px solid rgba(248,113,113,0.25); }
+    .form-msg.success { background: rgba(52,211,153,0.12);  color: var(--success); border: 1px solid rgba(52,211,153,0.25);  }
+    .form-msg.info    { background: rgba(124,109,250,0.12); color: var(--accent2); border: 1px solid rgba(124,109,250,0.25); }
+
+    /* ── buttons ──────────────────────────────────── */
+    .btn-primary {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #7c6dfa, #a78bfa);
+      border: none;
+      border-radius: var(--radius);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 6px 24px rgba(124,109,250,0.35);
+    }
+    .btn-primary:hover { opacity: 0.92; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    .forgot-link {
+      display: block;
+      text-align: right;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+      margin-top: -10px;
+      margin-bottom: 18px;
+      transition: color 0.2s;
+    }
+    .forgot-link:hover { color: var(--accent2); }
+
+    /* ── demo hint ────────────────────────────────── */
+    .demo-hint {
+      margin-top: 20px;
+      padding: 12px 14px;
+      background: rgba(124,109,250,0.08);
+      border: 1px solid rgba(124,109,250,0.2);
+      border-radius: 10px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+    .demo-hint strong { color: var(--accent2); }
+
+    /* ── divider ──────────────────────────────────── */
+    .divider {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin: 18px 0;
+      position: relative;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 42%;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider::before { left: 0; }
+    .divider::after  { right: 0; }
+
+    /* ── loading spinner ──────────────────────────── */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── responsive ───────────────────────────────── */
+    @media (max-width: 480px) {
+      .auth-card { padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+
+    <!-- Logo -->
+    <div class="auth-logo">
+      <span class="logo-icon">⚡</span>
+      <div class="logo-title">LifeOS</div>
+      <div class="logo-sub">Smart Productivity Dashboard</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login"    onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab"        id="tab-register" onclick="switchTab('register')">Create Account</button>
+    </div>
+
+    <!-- ── LOGIN PANEL ── -->
+    <div class="auth-panel active" id="panel-login">
+      <div class="form-msg" id="login-msg"></div>
+
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email Address</label>
+          <input class="form-input" type="email" id="login-email"
+                 placeholder="you@example.com" required autocomplete="email" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password</label>
+          <input class="form-input" type="password" id="login-password"
+                 placeholder="••••••••" required autocomplete="current-password" />
+        </div>
+
+        <a class="forgot-link" href="#" onclick="showForgotInfo(event)">Forgot password?</a>
+
+        <button class="btn-primary" type="submit" id="login-btn">Sign In</button>
+      </form>
+
+      <div class="demo-hint" style="cursor: pointer; user-select: none;" onclick="fillDemo()" title="Click to auto-fill credentials">
+        <strong>Demo Account (click to auto-fill):</strong><br>
+        Email: <strong>demo@lifeos.edu</strong> &nbsp;|&nbsp; Password: <strong>demo1234</strong>
+      </div>
+    </div>
+
+    <!-- ── REGISTER PANEL ── -->
+    <div class="auth-panel" id="panel-register">
+      <div class="form-msg" id="register-msg"></div>
+
+      <form id="register-form" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label class="form-label" for="reg-name">Full Name</label>
+          <input class="form-input" type="text" id="reg-name"
+                 placeholder="Your name" required autocomplete="name" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-email">Email Address</label>
+          <input class="form-input" type="email" id="reg-email"
+                 placeholder="you@example.com" required autocomplete="email" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-password">Password <span style="color:var(--muted);font-weight:400">(min 6 chars)</span></label>
+          <input class="form-input" type="password" id="reg-password"
+                 placeholder="••••••••" required autocomplete="new-password" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-confirm">Confirm Password</label>
+          <input class="form-input" type="password" id="reg-confirm"
+                 placeholder="••••••••" required autocomplete="new-password" />
+        </div>
+
+        <button class="btn-primary" type="submit" id="register-btn">Create Account</button>
+      </form>
+    </div>
+
+  </div><!-- .auth-card -->
+</div><!-- .auth-wrap -->
+
+<script>
+  function fillDemo() {
+    const emailInput = document.getElementById('login-email');
+    const pwdInput   = document.getElementById('login-password');
+    if (emailInput && pwdInput) {
+      emailInput.value = 'demo@lifeos.edu';
+      pwdInput.value   = 'demo1234';
+      emailInput.focus();
+    }
+  }
+
+  // ── Tab switching ──────────────────────────────────────────────────────────
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+    clearMsgs();
+  }
+
+  function clearMsgs() {
+    document.querySelectorAll('.form-msg').forEach(m => {
+      m.className = 'form-msg'; m.textContent = '';
+    });
+  }
+
+  function showMsg(id, text, type = 'error') {
+    const el = document.getElementById(id);
+    el.className = 'form-msg show ' + type;
+    el.innerHTML = (type === 'error' ? '⚠️ ' : type === 'success' ? '✅ ' : 'ℹ️ ') + text;
+  }
+
+  // ── Forgot password info ───────────────────────────────────────────────────
+  function showForgotInfo(e) {
+    e.preventDefault();
+    showMsg('login-msg',
+      'Password recovery will be available in a future version. Please contact support.',
+      'info');
+  }
+
+  // ── Login ──────────────────────────────────────────────────────────────────
+  async function handleLogin(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    clearMsgs();
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn      = document.getElementById('login-btn');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Signing in…';
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method:      'POST',
+        headers:     { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body:        JSON.stringify({ email, password }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem('lifeos_logged_in', 'true');
+        localStorage.setItem('lifeos_user', JSON.stringify(data.user || { name: 'Demo Student', email }));
+        showMsg('login-msg', `Welcome back, ${data.user.name}!`, 'success');
+        setTimeout(() => { window.location.href = 'index.html'; }, 400);
+        return;
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        showMsg('login-msg', errData.error || 'Invalid email or password');
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+        return;
+      }
+    } catch (_) {
+      // Backend not reached (e.g. Netlify static hosting fallback)
+    }
+
+    // Static / LocalStorage fallback (works directly on static hosting)
+    const localUsers = JSON.parse(localStorage.getItem('lifeos_registered_users') || '[]');
+    const userMatch = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+
+    if ((email.toLowerCase() === 'demo@lifeos.edu' && password === 'demo1234') || userMatch) {
+      const userObj = userMatch ? { name: userMatch.name, email: userMatch.email } : { name: 'Demo Student', email: 'demo@lifeos.edu' };
+      localStorage.setItem('lifeos_logged_in', 'true');
+      localStorage.setItem('lifeos_user', JSON.stringify(userObj));
+      showMsg('login-msg', `Welcome back, ${userObj.name}!`, 'success');
+      setTimeout(() => { window.location.href = 'index.html'; }, 400);
+    } else {
+      showMsg('login-msg', 'Invalid email or password');
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+  }
+
+  // ── Register ───────────────────────────────────────────────────────────────
+  async function handleRegister(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    clearMsgs();
+    const name     = document.getElementById('reg-name').value.trim();
+    const email    = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const confirm  = document.getElementById('reg-confirm').value;
+    const btn      = document.getElementById('register-btn');
+
+    if (password !== confirm) {
+      showMsg('register-msg', 'Passwords do not match');
+      return;
+    }
+    if (password.length < 6) {
+      showMsg('register-msg', 'Password must be at least 6 characters');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Creating account…';
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method:      'POST',
+        headers:     { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body:        JSON.stringify({ name, email, password }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem('lifeos_logged_in', 'true');
+        localStorage.setItem('lifeos_user', JSON.stringify(data.user || { name, email }));
+        showMsg('register-msg', 'Account created! Signing you in…', 'success');
+        setTimeout(() => { window.location.href = 'index.html'; }, 400);
+        return;
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        showMsg('register-msg', errData.error || 'Registration failed');
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+        return;
+      }
+    } catch (_) {
+      // Backend not reached (e.g. Netlify static hosting fallback)
+    }
+
+    // Static / LocalStorage fallback (works directly on static hosting)
+    const localUsers = JSON.parse(localStorage.getItem('lifeos_registered_users') || '[]');
+    if (localUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+      showMsg('register-msg', 'An account with this email already exists');
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+      return;
+    }
+
+    localUsers.push({ name, email, password });
+    localStorage.setItem('lifeos_registered_users', JSON.stringify(localUsers));
+    localStorage.setItem('lifeos_logged_in', 'true');
+    localStorage.setItem('lifeos_user', JSON.stringify({ name, email }));
+
+    showMsg('register-msg', 'Account created! Signing you in…', 'success');
+    setTimeout(() => { window.location.href = 'index.html'; }, 400);
+  }
+</script>
+</body>
+</html>

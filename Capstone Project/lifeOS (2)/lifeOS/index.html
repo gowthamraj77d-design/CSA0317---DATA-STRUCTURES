@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LifeOS – Smart Personal Productivity Dashboard</title>
+    <meta name="description" content="LifeOS is a smart personal productivity dashboard for managing tasks, goals, activity history, and universal search — built with Queue, Stack, Tree, and HashMap data structures." />
+    <meta name="keywords" content="productivity, task manager, goal tracker, dashboard, data structures" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script>
+        // Auth Guard: Open login page first if user is not signed in
+        if (!localStorage.getItem('lifeos_logged_in') && !sessionStorage.getItem('lifeos_logged_in')) {
+            window.location.replace('auth.html');
+        }
+    </script>
+</head>
+<body data-theme="dark">
+
+<!-- ══════════════════════════════════════════
+     APP SHELL
+══════════════════════════════════════════ -->
+<div class="app-shell">
+
+    <!-- ─────────────────────────────────────
+         SIDEBAR
+    ───────────────────────────────────────── -->
+    <nav id="sidebar" role="navigation" aria-label="Main navigation">
+        <div class="sidebar-logo">
+            <div class="logo-text">⚡ LifeOS</div>
+            <div class="logo-sub">Productivity Dashboard</div>
+        </div>
+
+        <div class="sidebar-nav">
+            <a href="#" class="nav-item nav-active" data-nav="dashboard" id="nav-dashboard" aria-label="Dashboard">
+                <span class="nav-icon">🏠</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-nav="tasks-goals" id="nav-tasks-goals" aria-label="Tasks and Goals">
+                <span class="nav-icon">📋</span>
+                <span>Tasks &amp; Goals</span>
+            </a>
+            <a href="#" class="nav-item" data-nav="notes" id="nav-notes" aria-label="Notes">
+                <span class="nav-icon">📝</span>
+                <span>Notes</span>
+            </a>
+            <a href="#" class="nav-item" data-nav="activity" id="nav-activity" aria-label="Activity History">
+                <span class="nav-icon">🕒</span>
+                <span>Activity</span>
+            </a>
+            <a href="#" class="nav-item" data-nav="search" id="nav-search" aria-label="Universal Search">
+                <span class="nav-icon">🔍</span>
+                <span>Universal Search</span>
+            </a>
+            <a href="#" class="nav-item" data-nav="analytics" id="nav-analytics" aria-label="Analytics">
+                <span class="nav-icon">📊</span>
+                <span>Analytics</span>
+            </a>
+            <a href="#" class="nav-item" data-nav="settings" id="nav-settings" aria-label="Settings">
+                <span class="nav-icon">⚙️</span>
+                <span>Settings</span>
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user-card" id="sidebar-user-card" title="Click to open Login page" style="cursor: pointer;">
+                <div class="sidebar-avatar" id="sidebar-avatar">
+                    <span id="sidebar-avatar-text">D</span>
+                    <span class="user-status-dot" title="Active"></span>
+                </div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-name" id="sidebar-user-name">Demo Student</div>
+                    <div class="sidebar-user-email" id="sidebar-user-email">demo@lifeos.edu</div>
+                </div>
+            </div>
+            <button id="logout-btn" class="btn-logout" title="Sign out to Login Page" aria-label="Sign out">
+                <span class="logout-icon">🚪</span>
+                <span class="logout-text">Sign Out</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ─────────────────────────────────────
+         MAIN CONTENT
+    ───────────────────────────────────────── -->
+    <div class="main-content">
+
+        <!-- HEADER -->
+        <header class="app-header" role="banner">
+            <div class="header-left">
+                <button class="hamburger-btn" id="hamburger-btn" aria-label="Toggle sidebar">☰</button>
+                <div class="header-search-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="search"
+                           id="header-search"
+                           placeholder="Search tasks, goals, notes…"
+                           aria-label="Global search"
+                           autocomplete="off" />
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="header-datetime" aria-live="polite">
+                    <div class="header-time" id="current-time">--:--:--</div>
+                    <div class="header-date" id="current-date"></div>
+                </div>
+                <button id="theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">☀️</button>
+            </div>
+        </header>
+
+        <!-- ══════════════════════════════════
+             SECTION: DASHBOARD (HOME)
+        ══════════════════════════════════════ -->
+        <section id="section-dashboard" class="page-section active-section" role="main">
+
+            <!-- Welcome Banner -->
+            <div class="welcome-banner">
+                <div class="welcome-title">Good day! Welcome back to LifeOS 👋</div>
+                <div class="welcome-subtitle">Here's your productivity overview for today.</div>
+                <div class="welcome-score">Productivity Score: <strong id="productivity-score-mini">0%</strong></div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-grid summary-grid-extended" role="region" aria-label="Summary statistics">
+                <div class="summary-card card-tasks">
+                    <span class="card-icon">📋</span>
+                    <div class="card-value" id="card-total-tasks">0</div>
+                    <div class="card-label">Total Tasks</div>
+                </div>
+                <div class="summary-card card-pending">
+                    <span class="card-icon">⏳</span>
+                    <div class="card-value" id="card-pending-tasks">0</div>
+                    <div class="card-label">Pending Tasks</div>
+                </div>
+                <div class="summary-card card-done">
+                    <span class="card-icon">✅</span>
+                    <div class="card-value" id="card-completed-tasks">0</div>
+                    <div class="card-label">Completed Tasks</div>
+                </div>
+                <div class="summary-card card-goals">
+                    <span class="card-icon">🎯</span>
+                    <div class="card-value" id="card-active-goals">0</div>
+                    <div class="card-label">Active Goals</div>
+                </div>
+                <div class="summary-card card-goals-done">
+                    <span class="card-icon">⭐</span>
+                    <div class="card-value" id="card-completed-goals">0</div>
+                    <div class="card-label">Completed Goals</div>
+                </div>
+                <div class="summary-card card-progress">
+                    <span class="card-icon">📈</span>
+                    <div class="card-value" id="card-overall-progress">0%</div>
+                    <div class="card-label">Goal Progress</div>
+                </div>
+                <div class="summary-card card-score">
+                    <span class="card-icon">🏆</span>
+                    <div class="card-value" id="card-productivity">0%</div>
+                    <div class="card-label">Productivity</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid">
+
+                <!-- Today's Tasks -->
+                <div class="card">
+                    <div class="widget-title">
+                        <span>📋 Today's Tasks</span>
+                        <button class="btn btn-primary btn-sm" onclick="openModal('add-task-modal')" id="dash-add-task-btn" aria-label="Add new task">+ Add Task</button>
+                    </div>
+                    <div id="today-tasks">
+                        <div class="empty-state"><span class="empty-icon">📋</span><p>No tasks yet.</p></div>
+                    </div>
+                </div>
+
+                <!-- Goals Overview -->
+                <div class="card">
+                    <div class="widget-title">
+                        <span>🎯 Goals Overview</span>
+                        <button class="btn btn-primary btn-sm" onclick="openModal('add-goal-modal')" id="dash-add-goal-btn" aria-label="Add new goal">+ New Goal</button>
+                    </div>
+                    <div id="goals-overview">
+                        <div class="empty-state"><span class="empty-icon">🎯</span><p>No goals yet.</p></div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="widget-title">
+                        <span>🕒 Recent Activity</span>
+                        <button class="btn btn-ghost btn-sm" onclick="navigateTo('activity')" id="dash-view-all-activity-btn">View All</button>
+                    </div>
+                    <div id="dashboard-activity">
+                        <div class="empty-state"><span class="empty-icon">🕒</span><p>No activity yet.</p></div>
+                    </div>
+                </div>
+
+                <!-- Productivity Score Widget -->
+                <div class="card">
+                    <div class="widget-title">📈 Productivity Score</div>
+                    <div class="productivity-ring-wrap">
+                        <div class="productivity-ring">
+                            <svg width="130" height="130" viewBox="0 0 130 130" aria-label="Productivity ring chart">
+                                <defs>
+                                    <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#7c6df0" />
+                                        <stop offset="100%" stop-color="#e879f9" />
+                                    </linearGradient>
+                                </defs>
+                                <circle class="ring-bg" cx="65" cy="65" r="54" />
+                                <circle id="productivity-ring-fill" cx="65" cy="65" r="54"
+                                        stroke-dasharray="339.3"
+                                        stroke-dashoffset="339.3" />
+                            </svg>
+                            <div class="ring-center-text">
+                                <span id="productivity-ring-text">0%</span>
+                                <span class="ring-label">Score</span>
+                            </div>
+                        </div>
+                        <p style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:12px;">
+                            Your score is calculated from task completion (60%) and goal progress (40%).
+                        </p>
+                    </div>
+                </div>
+
+                <!-- ═══ DATA STRUCTURES DEMONSTRATION PANEL ═══ -->
+                <div class="card card-full">
+                    <div class="widget-title">
+                        <span>🎓 DATA STRUCTURES USED IN LIFEOS</span>
+                        <span class="ds-badge ds-queue" style="margin-left:auto;">Academic Overview</span>
+                    </div>
+                    <div class="ds-demo-grid">
+                        <div class="ds-demo-card">
+                            <div class="ds-card-header">
+                                <span class="ds-card-icon">📋</span>
+                                <div>
+                                    <div class="ds-card-name">QUEUE</div>
+                                    <div class="ds-card-feature">Task Scheduling</div>
+                                </div>
+                            </div>
+                            <p class="ds-card-desc">Organizes tasks in FIFO processing order. Newest items enqueue at rear, head task dequeued upon completion.</p>
+                            <span class="ds-card-tag">FIFO · First In, First Out</span>
+                        </div>
+
+                        <div class="ds-demo-card">
+                            <div class="ds-card-header">
+                                <span class="ds-card-icon">🎯</span>
+                                <div>
+                                    <div class="ds-card-name">TREE</div>
+                                    <div class="ds-card-feature">Goal Management</div>
+                                </div>
+                            </div>
+                            <p class="ds-card-desc">Organizes main goals and sub-goals hierarchically. Child completion automatically recalculates parent goal progress.</p>
+                            <span class="ds-card-tag">N-ary Tree · Recursion</span>
+                        </div>
+
+                        <div class="ds-demo-card">
+                            <div class="ds-card-header">
+                                <span class="ds-card-icon">🕒</span>
+                                <div>
+                                    <div class="ds-card-name">STACK</div>
+                                    <div class="ds-card-feature">Activity History</div>
+                                </div>
+                            </div>
+                            <p class="ds-card-desc">Logs recent user actions in LIFO order. The most recent activity is pushed to top and displayed first.</p>
+                            <span class="ds-card-tag">LIFO · Last In, First Out</span>
+                        </div>
+
+                        <div class="ds-demo-card">
+                            <div class="ds-card-header">
+                                <span class="ds-card-icon">🔍</span>
+                                <div>
+                                    <div class="ds-card-name">HASH MAP</div>
+                                    <div class="ds-card-feature">Universal Search</div>
+                                </div>
+                            </div>
+                            <p class="ds-card-desc">Indexes all tasks, goals, notes, and activity events by unique keys for fast O(1) retrieval and filtering.</p>
+                            <span class="ds-card-tag">HashMap · O(1) Retrieval</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ SYSTEM STATUS PANEL ═══ -->
+                <div class="card card-full">
+                    <div class="widget-title">
+                        <span>⚡ SYSTEM STATUS &amp; MODULE HEALTH</span>
+                        <span class="status-live-pill" style="margin-left:auto;">● System Operational</span>
+                    </div>
+                    <div class="system-status-grid">
+                        <div class="status-item">
+                            <span class="status-dot dot-active">●</span>
+                            <span class="status-module">Queue Module</span>
+                            <span class="status-value" id="status-queue">Active</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot dot-active">●</span>
+                            <span class="status-module">Tree Module</span>
+                            <span class="status-value" id="status-tree">Active</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot dot-active">●</span>
+                            <span class="status-module">Stack Module</span>
+                            <span class="status-value" id="status-stack">Active</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot dot-active">●</span>
+                            <span class="status-module">Hash Map Module</span>
+                            <span class="status-value" id="status-hashmap">Active</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot dot-active">●</span>
+                            <span class="status-module">Local Storage</span>
+                            <span class="status-value" id="status-storage">Active</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /dashboard-grid -->
+        </section>
+
+        <!-- ══════════════════════════════════
+             SECTION: TASKS & GOALS
+        ══════════════════════════════════════ -->
+        <section id="section-tasks-goals" class="page-section">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">📋 Tasks &amp; Goals</h1>
+                    <p class="section-subtitle">Manage your tasks (Queue) and goals (Tree)</p>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="openModal('add-task-modal')" id="tg-add-task-btn" aria-label="Add task">+ Add Task</button>
+                    <button class="btn btn-outline" onclick="openModal('add-goal-modal')" id="tg-add-goal-btn" aria-label="Add goal">🎯 New Goal</button>
+                </div>
+            </div>
+
+            <div class="module-grid">
+
+                <!-- ═══ Tasks Panel ═══ -->
+                <div class="module-panel">
+                    <!-- Panel Title + DS Badge -->
+                    <div class="module-panel-title">
+                        <div class="panel-title-left">
+                            <span>📋 Task Queue</span>
+                            <span class="ds-badge ds-queue">Data Structure: QUEUE</span>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="openModal('add-task-modal')" id="tg-inline-add-task-btn" aria-label="Add task">+ Add Task</button>
+                    </div>
+
+                    <!-- Queue Stats Bar -->
+                    <div class="queue-stats-bar">
+                        <div class="queue-stat">
+                            <span class="qs-label">Queue Size</span>
+                            <span class="qs-value" id="queue-size-badge">0</span>
+                        </div>
+                        <div class="queue-stat">
+                            <span class="qs-label">Pending</span>
+                            <span class="qs-value qs-pending" id="queue-pending-badge">0</span>
+                        </div>
+                        <div class="queue-stat">
+                            <span class="qs-label">FIFO Order</span>
+                            <span class="qs-value qs-info">↓ enqueue</span>
+                        </div>
+                        <div class="queue-stat">
+                            <span class="qs-label">Head (Next)</span>
+                            <span class="qs-value qs-head" id="queue-head-task">—</span>
+                        </div>
+                    </div>
+
+                    <!-- Task Tabs -->
+                    <div class="tabs" role="tablist" aria-label="Task filter tabs">
+                        <button class="tab-btn tab-active"
+                                id="tab-pending"
+                                role="tab"
+                                aria-selected="true"
+                                onclick="switchTaskTab('pending')">⏳ Pending</button>
+                        <button class="tab-btn"
+                                id="tab-completed"
+                                role="tab"
+                                aria-selected="false"
+                                onclick="switchTaskTab('completed')">✅ Completed</button>
+                        <button class="btn btn-danger btn-sm" id="clear-completed-btn"
+                                style="display:none;margin-left:auto;"
+                                aria-label="Clear completed tasks">🗑️ Clear Done</button>
+                    </div>
+
+                    <div id="tab-panel-pending" class="tab-panel tab-panel-active" role="tabpanel">
+                        <div id="tasks-pending-list">
+                            <div class="empty-state"><span class="empty-icon">✨</span><p>No pending tasks. Add one above!</p></div>
+                        </div>
+                    </div>
+                    <div id="tab-panel-completed" class="tab-panel" role="tabpanel">
+                        <div id="tasks-completed-list">
+                            <div class="empty-state"><span class="empty-icon">📋</span><p>No completed tasks yet.</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ Goals Panel ═══ -->
+                <div class="module-panel">
+                    <!-- Panel Title + DS Badge -->
+                    <div class="module-panel-title">
+                        <div class="panel-title-left">
+                            <span>🎯 Goal Tree</span>
+                            <span class="ds-badge ds-tree">Data Structure: TREE</span>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="openModal('add-goal-modal')" id="tg-inline-add-goal-btn" aria-label="Add goal">🎯 New Goal</button>
+                    </div>
+
+                    <!-- Tree legend -->
+                    <div class="tree-legend">
+                        <span class="tl-item"><span>🎯</span> Main Goal</span>
+                        <span class="tl-sep">›</span>
+                        <span class="tl-item"><span>📌</span> Sub-Goal</span>
+                        <span class="tl-sep">›</span>
+                        <span class="tl-item"><span>◦</span> Task</span>
+                        <span class="tl-right">▼/▶ expand/collapse</span>
+                    </div>
+
+                    <div id="goals-tree-container">
+                        <div class="empty-state"><span class="empty-icon">🎯</span><p>No goals yet. Create your first goal!</p></div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════
+             SECTION: NOTES
+        ══════════════════════════════════════ -->
+        <section id="section-notes" class="page-section">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">📝 Notes</h1>
+                    <p class="section-subtitle">Create and manage your notes · searchable via Universal Search</p>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                    <input type="search"
+                           id="notes-search"
+                           class="form-control"
+                           placeholder="Filter notes…"
+                           style="max-width:220px;"
+                           aria-label="Filter notes" />
+                    <button class="btn btn-primary" onclick="openModal('add-note-modal')" id="notes-add-btn" aria-label="Add note">+ New Note</button>
+                </div>
+            </div>
+
+            <div class="notes-grid" id="notes-grid">
+                <div class="empty-state"><span class="empty-icon">📝</span><p>No notes yet. Create your first note!</p></div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════
+             SECTION: ACTIVITY (STACK)
+        ══════════════════════════════════════ -->
+        <section id="section-activity" class="page-section">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">🕒 Activity History</h1>
+                    <p class="section-subtitle">All actions logged via the Activity Stack (LIFO) — newest first</p>
+                </div>
+                <button class="btn btn-outline btn-sm"
+                        id="activity-clear-btn"
+                        onclick="if(confirm('Clear all activity history?')){ clearActivities(); showToast('Activity cleared.', 'success'); }"
+                        aria-label="Clear activity history">🗑️ Clear History</button>
+            </div>
+
+            <div class="card" style="max-height:calc(100vh - 220px);overflow-y:auto;">
+                <div id="activity-feed">
+                    <div class="empty-state"><span class="empty-icon">🕒</span><p>No activities yet.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════
+             SECTION: UNIVERSAL SEARCH
+        ══════════════════════════════════════ -->
+        <section id="section-search" class="page-section">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">🔍 Universal Search</h1>
+                    <p class="section-subtitle">Search across all tasks, goals, sub-goals, notes, and activity history using HashMap O(1) index</p>
+                </div>
+            </div>
+
+            <div class="search-input-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="search"
+                       id="search-input-main"
+                       placeholder="Search everything… e.g. 'DSA', 'project', 'resume'"
+                       aria-label="Universal search"
+                       autocomplete="off" />
+            </div>
+
+            <div id="search-results">
+                <div class="search-placeholder">
+                    <span class="search-icon-large">🔍</span>
+                    <p>Start typing to search across tasks, goals, and notes…</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════
+             SECTION: ANALYTICS
+        ══════════════════════════════════════ -->
+        <section id="section-analytics" class="page-section">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">📊 Productivity Analytics</h1>
+                    <p class="section-subtitle">Your productivity insights at a glance</p>
+                </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="analytics-grid" role="region" aria-label="Analytics statistics">
+                <div class="analytics-stat">
+                    <div class="stat-value" id="analytics-total-tasks">0</div>
+                    <div class="stat-label">Total Tasks</div>
+                </div>
+                <div class="analytics-stat">
+                    <div class="stat-value" id="analytics-completed-tasks" style="color:var(--success)">0</div>
+                    <div class="stat-label">Completed Tasks</div>
+                </div>
+                <div class="analytics-stat">
+                    <div class="stat-value" id="analytics-pending-tasks" style="color:var(--warning)">0</div>
+                    <div class="stat-label">Pending Tasks</div>
+                </div>
+                <div class="analytics-stat">
+                    <div class="stat-value" id="analytics-activity-count" style="color:#e879f9">0</div>
+                    <div class="stat-label">Activity Events</div>
+                </div>
+                <div class="analytics-stat">
+                    <div class="stat-value" id="analytics-total-goals">0</div>
+                    <div class="stat-label">Total Goals</div>
+                </div>
+                <div class="analytics-stat">
+                    <div class="stat-value" id="analytics-completed-goals" style="color:var(--success)">0</div>
+                    <div class="stat-label">Completed Goals</div>
+                </div>
+                <div class="analytics-stat">
+                    <div class="stat-value" id="analytics-task-pct" style="color:var(--accent-light)">0%</div>
+                    <div class="stat-label">Task Completion</div>
+                </div>
+                <div class="analytics-stat">
+                    <div class="stat-value" id="analytics-goal-pct" style="color:#fb923c">0%</div>
+                    <div class="stat-label">Goal Completion</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="analytics-charts">
+
+                <!-- Completion Bars -->
+                <div class="chart-card">
+                    <h2 class="chart-title">📈 Completion Rates</h2>
+
+                    <div class="bar-chart-item">
+                        <div class="bar-label-row">
+                            <span>Task Completion</span>
+                            <span id="bar-task-completion-label">0%</span>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill bar-success" id="bar-task-completion"></div>
+                        </div>
+                    </div>
+
+                    <div class="bar-chart-item">
+                        <div class="bar-label-row">
+                            <span>Goal Completion</span>
+                            <span id="bar-goal-completion-label">0%</span>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill" id="bar-goal-completion" style="background:linear-gradient(90deg,#ea580c,#fb923c)"></div>
+                        </div>
+                    </div>
+
+                    <div class="bar-chart-item">
+                        <div class="bar-label-row">
+                            <span>Overall Productivity</span>
+                            <span id="bar-productivity-label">0%</span>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill" id="bar-productivity"></div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Priority distribution -->
+                    <h3 class="chart-title" style="font-size:13px;margin-top:4px;">🎨 Task Priority Distribution</h3>
+
+                    <div class="priority-bar-item">
+                        <div class="priority-label-row">
+                            <span>🔴 High &nbsp;<strong id="chart-high-count">0</strong></span>
+                            <span id="bar-high-label">0%</span>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill bar-danger" id="bar-high"></div>
+                        </div>
+                    </div>
+                    <div class="priority-bar-item">
+                        <div class="priority-label-row">
+                            <span>🟡 Medium &nbsp;<strong id="chart-medium-count">0</strong></span>
+                            <span id="bar-medium-label">0%</span>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill bar-warning" id="bar-medium"></div>
+                        </div>
+                    </div>
+                    <div class="priority-bar-item">
+                        <div class="priority-label-row">
+                            <span>🟢 Low &nbsp;<strong id="chart-low-count">0</strong></span>
+                            <span id="bar-low-label">0%</span>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill bar-success" id="bar-low"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Productivity Ring (large) -->
+                <div class="chart-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                    <h2 class="chart-title" style="text-align:center;margin-bottom:24px;">⭐ Productivity Score</h2>
+                    <div class="productivity-ring-wrap">
+                        <div class="productivity-ring" style="width:160px;height:160px;">
+                            <svg width="160" height="160" viewBox="0 0 160 160" aria-label="Large productivity ring">
+                                <defs>
+                                    <linearGradient id="ring-gradient-2" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#7c6df0" />
+                                        <stop offset="100%" stop-color="#e879f9" />
+                                    </linearGradient>
+                                </defs>
+                                <circle fill="none" stroke="var(--bg-input)" stroke-width="12"
+                                        cx="80" cy="80" r="64"
+                                        transform="rotate(-90 80 80)" />
+                                <circle fill="none" stroke="url(#ring-gradient-2)" stroke-width="12"
+                                        stroke-linecap="round"
+                                        cx="80" cy="80" r="64"
+                                        stroke-dasharray="402.1"
+                                        stroke-dashoffset="402.1"
+                                        id="analytics-ring-fill"
+                                        transform="rotate(-90 80 80)"
+                                        style="transition: stroke-dashoffset 0.8s cubic-bezier(0.34,1.56,0.64,1)" />
+                            </svg>
+                            <div class="ring-center-text">
+                                <span id="analytics-score" style="font-size:28px;font-weight:800;letter-spacing:-1px;">0%</span>
+                                <span class="ring-label">Overall Score</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /analytics-charts -->
+        </section>
+
+        <!-- ══════════════════════════════════
+             SECTION: SETTINGS
+        ══════════════════════════════════════ -->
+        <section id="section-settings" class="page-section">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">⚙️ Settings</h1>
+                    <p class="section-subtitle">Customize your LifeOS experience</p>
+                </div>
+            </div>
+
+            <!-- Theme -->
+            <div class="settings-section">
+                <div class="settings-section-title">🎨 Appearance</div>
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <p>Theme</p>
+                        <span>Choose between dark and light mode</span>
+                    </div>
+                    <div class="theme-buttons">
+                        <button class="btn btn-outline" id="settings-theme-dark" aria-label="Enable dark mode">🌙 Dark</button>
+                        <button class="btn btn-outline" id="settings-theme-light" aria-label="Enable light mode">☀️ Light</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="settings-section">
+                <div class="settings-section-title">🗄️ Data Management</div>
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <p>Clear Activity History</p>
+                        <span>Remove all logged activities from the Stack</span>
+                    </div>
+                    <button class="btn btn-outline" id="settings-clear-activity" aria-label="Clear activity history">🗑️ Clear History</button>
+                </div>
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <p>Reset Dashboard</p>
+                        <span>⚠️ Delete ALL tasks, goals, notes, and activities permanently</span>
+                    </div>
+                    <button class="btn btn-danger" id="settings-reset" aria-label="Reset dashboard data">🔄 Reset All Data</button>
+                </div>
+            </div>
+
+            <!-- About -->
+            <div class="settings-section">
+                <div class="settings-section-title">ℹ️ About LifeOS</div>
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <p>Version</p>
+                        <span>LifeOS V1 – Smart Personal Productivity Dashboard</span>
+                    </div>
+                    <span class="badge priority-low">V1.0</span>
+                </div>
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <p>Data Storage</p>
+                        <span>All data stored locally in your browser via LocalStorage</span>
+                    </div>
+                    <span style="font-size:12px;color:var(--text-muted);">Local Only</span>
+                </div>
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <p>Data Structures Used</p>
+                        <span>Queue (Tasks) · Tree (Goals) · Stack (Activity) · HashMap (Search)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div><!-- /main-content -->
+</div><!-- /app-shell -->
+
+<!-- ══════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════ -->
+
+<!-- Add Task Modal -->
+<div class="modal-overlay" id="add-task-modal" role="dialog" aria-modal="true" aria-labelledby="add-task-modal-title">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h2 class="modal-title" id="add-task-modal-title">📋 Add New Task</h2>
+            <button class="modal-close" aria-label="Close modal">✕</button>
+        </div>
+        <form id="add-task-form" novalidate>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="task-title">Task Title *</label>
+                    <input type="text" id="task-title" class="form-control" placeholder="e.g. Study DSA Arrays" required autocomplete="off" />
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="task-priority">Priority</label>
+                        <select id="task-priority" class="form-control">
+                            <option value="medium">🟡 Medium</option>
+                            <option value="high">🔴 High</option>
+                            <option value="low">🟢 Low</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="task-date">Due Date</label>
+                        <input type="date" id="task-date" class="form-control" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="task-goal-link">Link to Goal <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+                    <select id="task-goal-link" class="form-control">
+                        <option value="">— No goal link —</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="task-notes">Notes (optional)</label>
+                    <textarea id="task-notes" class="form-control" placeholder="Any additional details…" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost modal-close" aria-label="Cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="add-task-submit-btn">+ Add Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Task Modal -->
+<div class="modal-overlay" id="edit-task-modal" role="dialog" aria-modal="true" aria-labelledby="edit-task-modal-title">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h2 class="modal-title" id="edit-task-modal-title">✏️ Edit Task</h2>
+            <button class="modal-close" aria-label="Close modal">✕</button>
+        </div>
+        <form id="edit-task-form" novalidate>
+            <div class="modal-body">
+                <input type="hidden" id="edit-task-id" />
+                <div class="form-group">
+                    <label class="form-label" for="edit-task-title">Task Title *</label>
+                    <input type="text" id="edit-task-title" class="form-control" required autocomplete="off" />
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-task-priority">Priority</label>
+                        <select id="edit-task-priority" class="form-control">
+                            <option value="medium">🟡 Medium</option>
+                            <option value="high">🔴 High</option>
+                            <option value="low">🟢 Low</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-task-date">Due Date</label>
+                        <input type="date" id="edit-task-date" class="form-control" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-task-goal-link">Link to Goal <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+                    <select id="edit-task-goal-link" class="form-control">
+                        <option value="">— No goal link —</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-task-notes">Notes</label>
+                    <textarea id="edit-task-notes" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost modal-close" aria-label="Cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="edit-task-submit-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Goal Modal -->
+<div class="modal-overlay" id="add-goal-modal" role="dialog" aria-modal="true" aria-labelledby="add-goal-modal-title">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h2 class="modal-title" id="add-goal-modal-title">🎯 Create New Goal</h2>
+            <button class="modal-close" aria-label="Close modal">✕</button>
+        </div>
+        <form id="add-goal-form" novalidate>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="goal-title">Goal Title *</label>
+                    <input type="text" id="goal-title" class="form-control" placeholder="e.g. Become a Software Engineer" required autocomplete="off" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="goal-desc">Description (optional)</label>
+                    <textarea id="goal-desc" class="form-control" placeholder="What does achieving this goal mean to you?" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost modal-close" aria-label="Cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="add-goal-submit-btn">🎯 Create Goal</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Sub-Goal Modal -->
+<div class="modal-overlay" id="add-subgoal-modal" role="dialog" aria-modal="true" aria-labelledby="add-subgoal-modal-title">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h2 class="modal-title" id="add-subgoal-modal-title">➕ Add Sub-Goal</h2>
+            <button class="modal-close" aria-label="Close modal">✕</button>
+        </div>
+        <form id="add-subgoal-form" novalidate>
+            <div class="modal-body">
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+                    Adding sub-goal under: <strong id="subgoal-parent-name"></strong>
+                </p>
+                <input type="hidden" id="subgoal-parent-id" />
+                <div class="form-group">
+                    <label class="form-label" for="subgoal-title">Sub-Goal Title *</label>
+                    <input type="text" id="subgoal-title" class="form-control" placeholder="e.g. Learn Arrays" required autocomplete="off" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="subgoal-desc">Description (optional)</label>
+                    <textarea id="subgoal-desc" class="form-control" placeholder="Details about this sub-goal…" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost modal-close" aria-label="Cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="add-subgoal-submit-btn">➕ Add Sub-Goal</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Goal Modal -->
+<div class="modal-overlay" id="edit-goal-modal" role="dialog" aria-modal="true" aria-labelledby="edit-goal-modal-title">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h2 class="modal-title" id="edit-goal-modal-title">✏️ Edit Goal</h2>
+            <button class="modal-close" aria-label="Close modal">✕</button>
+        </div>
+        <form id="edit-goal-form" novalidate>
+            <div class="modal-body">
+                <input type="hidden" id="edit-goal-id" />
+                <div class="form-group">
+                    <label class="form-label" for="edit-goal-title">Goal Title *</label>
+                    <input type="text" id="edit-goal-title" class="form-control" required autocomplete="off" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-goal-description">Description</label>
+                    <textarea id="edit-goal-description" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost modal-close" aria-label="Cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="edit-goal-submit-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Note Modal -->
+<div class="modal-overlay" id="add-note-modal" role="dialog" aria-modal="true" aria-labelledby="add-note-modal-title">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h2 class="modal-title" id="add-note-modal-title">📝 New Note</h2>
+            <button class="modal-close" aria-label="Close modal">✕</button>
+        </div>
+        <form id="add-note-form" novalidate>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="note-title">Title *</label>
+                    <input type="text" id="note-title" class="form-control" placeholder="Note title" required autocomplete="off" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="note-category">Category</label>
+                    <select id="note-category" class="form-control">
+                        <option value="General">General</option>
+                        <option value="Work">Work</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Study">Study</option>
+                        <option value="Ideas">Ideas</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="note-content">Content</label>
+                    <textarea id="note-content" class="form-control" placeholder="Write your note here…" rows="5"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost modal-close" aria-label="Cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="add-note-submit-btn">📝 Save Note</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Note Modal -->
+<div class="modal-overlay" id="edit-note-modal" role="dialog" aria-modal="true" aria-labelledby="edit-note-modal-title">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h2 class="modal-title" id="edit-note-modal-title">✏️ Edit Note</h2>
+            <button class="modal-close" aria-label="Close modal">✕</button>
+        </div>
+        <form id="edit-note-form" novalidate>
+            <div class="modal-body">
+                <input type="hidden" id="edit-note-id" />
+                <div class="form-group">
+                    <label class="form-label" for="edit-note-title">Title *</label>
+                    <input type="text" id="edit-note-title" class="form-control" required autocomplete="off" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-note-category">Category</label>
+                    <select id="edit-note-category" class="form-control">
+                        <option value="General">General</option>
+                        <option value="Work">Work</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Study">Study</option>
+                        <option value="Ideas">Ideas</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-note-content">Content</label>
+                    <textarea id="edit-note-content" class="form-control" rows="5"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost modal-close" aria-label="Cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="edit-note-submit-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Voice Assistant Floating Widget -->
+<div id="voice-widget" class="voice-assistant-widget">
+    <div class="voice-widget-header">
+        <span class="voice-title">🎙️ NOVA / LifeOS Voice</span>
+        <button id="voice-mute-btn" class="voice-icon-btn" onclick="window.voiceAssistant && window.voiceAssistant.toggleMute()" title="Mute / Unmute Voice Response">🔊</button>
+    </div>
+    <div class="voice-widget-body">
+        <div id="voice-status-text" class="voice-status">Tap mic to speak</div>
+    </div>
+    <div class="voice-widget-controls">
+        <button id="voice-mic-btn" class="voice-mic-btn" onclick="window.voiceAssistant && window.voiceAssistant.startListening()" title="Start Voice Recognition">
+            🎤
+        </button>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+<!-- ══════════════════════════════════════════
+     SCRIPTS (load order matters)
+══════════════════════════════════════════ -->
+
+<!-- 0. API Client (must load first) -->
+<script src="js/api.js"></script>
+
+<!-- 1. Persistence -->
+<script src="js/storage.js"></script>
+
+<!-- 2. Data Structures -->
+<script src="js/queue.js"></script>
+<script src="js/stack.js"></script>
+<script src="js/tree.js"></script>
+<script src="js/hashmap.js"></script>
+
+<!-- 3. Feature Modules (search.js exposes searchIndex; must load before tasks/goals/notes reference it) -->
+<script src="js/activities.js"></script>
+<script src="js/search.js"></script>
+<script src="js/tasks.js"></script>
+<script src="js/goals.js"></script>
+<script src="js/notes.js"></script>
+
+<!-- 3b. Voice Assistant Module -->
+<script src="js/voice.js"></script>
+
+<!-- 4. App Controller (initialises everything) -->
+<script src="js/app.js"></script>
+
+<!-- 5. Inline: tab switching & analytics ring sync -->
+<script>
+    /* Task tabs */
+    function switchTaskTab(tab) {
+        document.getElementById('tab-panel-pending').classList.toggle('tab-panel-active', tab === 'pending');
+        document.getElementById('tab-panel-completed').classList.toggle('tab-panel-active', tab === 'completed');
+        document.getElementById('tab-pending').classList.toggle('tab-active', tab === 'pending');
+        document.getElementById('tab-completed').classList.toggle('tab-active', tab === 'completed');
+        document.getElementById('tab-pending').setAttribute('aria-selected', tab === 'pending');
+        document.getElementById('tab-completed').setAttribute('aria-selected', tab === 'completed');
+    }
+
+    /* Analytics large ring sync with productivity score */
+    const _origUpdateScore = window.updateProductivityScore;
+    window.updateProductivityScore = function() {
+        if (_origUpdateScore) _origUpdateScore();
+        const score = calcProductivity ? calcProductivity() : 0;
+        const ring  = document.getElementById('analytics-ring-fill');
+        if (ring) {
+            const C = 2 * Math.PI * 64; // r=64
+            ring.style.strokeDasharray  = C;
+            ring.style.strokeDashoffset = C - (score / 100) * C;
+        }
+        /* Update queue head display */
+        if (typeof peekQueue === 'function') {
+            const head = peekQueue();
+            const headEl = document.getElementById('queue-head-task');
+            if (headEl) headEl.textContent = head ? head.title.substring(0, 14) + (head.title.length > 14 ? '…' : '') : '—';
+        }
+    };
+</script>
+
+</body>
+</html>
